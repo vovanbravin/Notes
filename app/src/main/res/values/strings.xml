@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">NotesFB</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="rep_password">Repeat password</string>
+    <string name="have_account">Don\'t have an account?</string>
+    <string name="create_account">Create</string>
+    <string name="signIn">Sign in</string>
+    <string name="signUp">Sign up</string>
+    <string name="title">Title</string>
+    <string name="description">Description</string>
+    <string name="save">Save</string>
+    <string name="new_note">New note</string>
+    <string name="signOut">Sign out</string>
+    <string name="notes">Notes</string>
+    <string name="Verify">Verify</string>
+    <string name="singOutSnacbarText">Do you really want to get out?</string>
+
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
