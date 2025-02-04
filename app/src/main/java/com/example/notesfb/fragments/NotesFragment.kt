@@ -27,6 +27,7 @@ import com.example.notesfb.viewModels.NoteViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.toObjects
 import kotlinx.coroutines.flow.collectLatest
@@ -40,6 +41,7 @@ class NotesFragment : Fragment(), View.OnClickListener, NoteAdapter.NoteListener
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
     private lateinit var adapter: NoteAdapter
+    private lateinit var listener: ListenerRegistration
     private val viewModel: NoteViewModel by activityViewModels{
         NoteViewModel.NoteViewModelFactory()
     }
@@ -76,6 +78,23 @@ class NotesFragment : Fragment(), View.OnClickListener, NoteAdapter.NoteListener
                        })
                        snackbar.show()
                    }
+                   R.id.delete_all->
+                   {
+                       val snackbar = Snackbar.make(requireView(), resources.getString(R.string.verify_delete_all_notes), Snackbar.LENGTH_LONG)
+                       snackbar.setAction(resources.getString(R.string.Verify), object: View.OnClickListener{
+                           override fun onClick(v: View?) {
+                                deleteAllNotes()
+                           }
+
+                       })
+                       snackbar.show()
+                   }
+                   R.id.account->
+                   {
+                       setFragment(AccountFragment.newInstance(), R.id.place)
+                   }
+
+
                }
                 return true
            }
@@ -93,20 +112,26 @@ class NotesFragment : Fragment(), View.OnClickListener, NoteAdapter.NoteListener
     }
 
 
+    private fun deleteAllNotes()
+    {
+        viewModel.notes.value.forEach {
+            deleteNote(it)
+        }
+    }
+
+
     private fun getNotes()
     {
-        firestore.collection("users")
+        listener =  firestore.collection("users")
             .document(firebaseAuth.uid?:"")
             .collection("notes")
             .addSnapshotListener { data, error ->
                 val isLocal = data?.metadata?.hasPendingWrites()
-                Log.d("MyLog", "Статус синхронизации: ${if (isLocal!!) "Локально" else "Синхронизировано"}")
                 firestore.collection("users")
                     .document(firebaseAuth.uid ?: "")
                     .collection("notes")
                     .document()
                     .update("savedInFirestore", isLocal)
-                    .addOnSuccessListener { Log.d("MyLog", "Succces") }
                 val list = data?.toObjects(Note::class.java) ?: emptyList<Note>()
                 viewModel.setNotes(list)
                 }
@@ -197,8 +222,14 @@ class NotesFragment : Fragment(), View.OnClickListener, NoteAdapter.NoteListener
             .commit()
     }
 
+
+
     companion object {
         @JvmStatic
         fun newInstance() = NotesFragment()
     }
+
+
+
+
 }

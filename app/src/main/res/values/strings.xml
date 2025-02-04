@@ -15,6 +15,11 @@
     <string name="notes">Notes</string>
     <string name="Verify">Verify</string>
     <string name="singOutSnacbarText">Do you really want to get out?</string>
+    <string name="different_password">The passwords do not match</string>
+    <string name="delete_all_notes">Delete all notes</string>
+    <string name="verify_delete_all_notes">Do you really want to delete all notes?</string>
+    <string name="remember_me">Remember me</string>
+    <string name="my_account">My account</string>
 
 
     <!-- TODO: Remove or change this placeholder text -->

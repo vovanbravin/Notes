@@ -7,6 +7,7 @@ import com.example.notesfb.models.Note
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
+import com.google.protobuf.Internal.BooleanList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -16,6 +17,18 @@ class NoteViewModel(): ViewModel() {
     val notes = _notes.asStateFlow()
 
     private var selectedItem: Note? = null
+
+    private var rememberUser: Boolean = false
+
+    fun setRemeberUser(status: Boolean)
+    {
+        this.rememberUser = status
+    }
+
+    fun getRememberUser(): Boolean
+    {
+        return this.rememberUser
+    }
 
     fun setSelectedItem(selectedItem: Note?)
     {

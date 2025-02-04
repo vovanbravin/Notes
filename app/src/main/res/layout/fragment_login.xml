@@ -64,6 +64,12 @@
                 android:inputType="textPassword"
                 android:minHeight="48dp" />
 
+            <CheckBox
+                android:id="@+id/rememberUser"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/remember_me" />
+
             <TextView
                 android:id="@+id/tvRepPassword"
                 android:layout_width="wrap_content"
