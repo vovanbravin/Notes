@@ -12,7 +12,7 @@ import com.example.notesfb.R
 import com.example.notesfb.databinding.NoteItemBinding
 import com.example.notesfb.models.Note
 
-class NoteAdapter(val context: Context): ListAdapter<Note, NoteAdapter.NoteHolder>(NoteCompare()) {
+class NoteAdapter(val context: Context, val noteListener: NoteListener): ListAdapter<Note, NoteAdapter.NoteHolder>(NoteCompare()) {
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteHolder {
@@ -20,7 +20,7 @@ class NoteAdapter(val context: Context): ListAdapter<Note, NoteAdapter.NoteHolde
     }
 
     override fun onBindViewHolder(holder: NoteHolder, position: Int) {
-        holder.setData(getItem(position), context)
+        holder.setData(getItem(position), context, noteListener)
     }
 
 
@@ -28,7 +28,7 @@ class NoteAdapter(val context: Context): ListAdapter<Note, NoteAdapter.NoteHolde
     {
         private val binding = NoteItemBinding.bind(view)
 
-        fun setData(note: Note, context: Context) = with(binding)
+        fun setData(note: Note, context: Context, noteListener: NoteListener) = with(binding)
         {
             title.text = note.title
             description.text = note.description
@@ -36,6 +36,9 @@ class NoteAdapter(val context: Context): ListAdapter<Note, NoteAdapter.NoteHolde
                 if(note.savedInFirestore) ContextCompat.getDrawable(context, R.drawable.true_indicator)
                 else ContextCompat.getDrawable(context, R.drawable.false_indicator)
             )
+            itemView.setOnClickListener {
+                noteListener.onClickItem(note)
+            }
         }
 
         companion object
@@ -55,6 +58,10 @@ class NoteAdapter(val context: Context): ListAdapter<Note, NoteAdapter.NoteHolde
         override fun areContentsTheSame(oldItem: Note, newItem: Note): Boolean {
             return oldItem == newItem
         }
+    }
+
+    interface NoteListener{
+        fun onClickItem(note: Note)
     }
 
 }

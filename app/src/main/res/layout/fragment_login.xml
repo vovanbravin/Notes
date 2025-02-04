@@ -9,7 +9,7 @@
     tools:context=".fragments.LoginFragment">
 
     <androidx.cardview.widget.CardView
-        android:layout_width="wrap_content"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
         app:cardCornerRadius="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -36,7 +36,7 @@
 
             <EditText
                 android:id="@+id/email"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="5dp"
                 android:ems="10"
@@ -84,6 +84,16 @@
                 android:hint="@string/password"
                 android:inputType="textPassword"
                 android:minHeight="48dp"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="none"
+                android:inputType="textMultiLine"
+                android:scrollHorizontally="false"
+                android:textColor="#FF0000"
                 android:visibility="gone" />
 
             <Button

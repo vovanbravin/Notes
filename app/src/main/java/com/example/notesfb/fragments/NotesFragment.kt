@@ -1,6 +1,7 @@
 package com.example.notesfb.fragments
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.Menu
@@ -11,27 +12,37 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
+import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.RecyclerView
 import com.example.notesfb.R
 import com.example.notesfb.activities.MyApp
 import com.example.notesfb.adapters.NoteAdapter
 import com.example.notesfb.databinding.FragmentNotesBinding
 import com.example.notesfb.models.Note
+import com.example.notesfb.viewModels.NoteViewModel
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.ktx.toObjects
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import kotlin.time.Duration
 
 
-class NotesFragment : Fragment(), View.OnClickListener {
+class NotesFragment : Fragment(), View.OnClickListener, NoteAdapter.NoteListener {
 
     private lateinit var binding: FragmentNotesBinding
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
     private lateinit var adapter: NoteAdapter
+    private val viewModel: NoteViewModel by activityViewModels{
+        NoteViewModel.NoteViewModelFactory()
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -77,19 +88,37 @@ class NotesFragment : Fragment(), View.OnClickListener {
         actionBar?.setDisplayHomeAsUpEnabled(false)
 
         init()
-        suscribe()
+        getNotes()
+        subscribe()
     }
 
-    private fun suscribe()
+
+    private fun getNotes()
     {
         firestore.collection("users")
             .document(firebaseAuth.uid?:"")
             .collection("notes")
-            .get(Source.CACHE)
-            .addOnSuccessListener { data ->
+            .addSnapshotListener { data, error ->
+                val isLocal = data?.metadata?.hasPendingWrites()
+                Log.d("MyLog", "Статус синхронизации: ${if (isLocal!!) "Локально" else "Синхронизировано"}")
+                firestore.collection("users")
+                    .document(firebaseAuth.uid ?: "")
+                    .collection("notes")
+                    .document()
+                    .update("savedInFirestore", isLocal)
+                    .addOnSuccessListener { Log.d("MyLog", "Succces") }
                 val list = data?.toObjects(Note::class.java) ?: emptyList<Note>()
-                adapter.submitList(list)
+                viewModel.setNotes(list)
                 }
+    }
+
+    private fun subscribe()
+    {
+        lifecycleScope.launch {
+            viewModel.notes.collect{
+                adapter.submitList(it)
+            }
+        }
     }
 
     private fun init() = with(binding)
@@ -99,10 +128,57 @@ class NotesFragment : Fragment(), View.OnClickListener {
         firebaseAuth = (context?.applicationContext as MyApp).firebaseAuth
         firestore = (context?.applicationContext as MyApp).firestore
 
+        val swipeHandler = object : ItemTouchHelper.SimpleCallback(0,ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT)
+        {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder,
+            ): Boolean {
+                return false
+            }
+
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                deleteNote(viewModel.notes.value.get(position))
+
+            }
+
+        }
+
+
         rcView.layoutManager = GridLayoutManager(activity, 2)
-        adapter = NoteAdapter(requireContext())
+        ItemTouchHelper(swipeHandler).attachToRecyclerView(rcView)
+        adapter = NoteAdapter(requireContext(), this@NotesFragment)
         rcView.adapter = adapter
     }
+
+    override fun onClickItem(note: Note) {
+        viewModel.setSelectedItem(note)
+        setFragment(NewNoteFragment.newInstance(), R.id.place)
+    }
+
+    private fun deleteNote(note: Note)
+    {
+        val userCollection =  firestore.collection("users")
+            .document(firebaseAuth.uid ?: "")
+            .collection("notes")
+
+        userCollection
+            .whereEqualTo("lastTimeUpdate", note.lastTimeUpdate)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                if(!snapshot.isEmpty)
+                {
+                    for (document in snapshot.documents)
+                    {
+                        document.reference.delete()
+                    }
+                }
+            }
+
+    }
+
 
     override fun onClick(view: View?) {
         when(view?.id)
